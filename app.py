@@ -7,7 +7,6 @@ from constants import (
     INDIVIDUAL_PLAYER_ROW_FORMAT,
     GAMERTAG_TO_NAME_MAP,
     TEAM_ROSTERS,
-    RANDOM_PLAYER,
     TEAM_R306,
     TEAM_MBDF,
 )
@@ -26,7 +25,7 @@ class WarzoneData:
         self.warzone_match_cache: Dict[str, WarzoneMatch] = {}
 
     def _get_team_roster_for_match(self, warzone_match_data: WarzoneMatch) -> List[str]:
-        players = [GAMERTAG_TO_NAME_MAP.get(p.gamertag, RANDOM_PLAYER) for p in warzone_match_data.players]
+        players = [GAMERTAG_TO_NAME_MAP.get(p.gamertag, "Random") for p in warzone_match_data.players]
         deduped_players = list(set(players))
         deduped_players.sort()
         return deduped_players

@@ -50,4 +50,4 @@ TEAM_TO_SHEET_ID = {
     TEAM_MBDF: MBDF_SHEET_ID,
 }
 
-RANDOM_PLAYER = "Random"
+CORE_MODES = ["BR Solos", "BR Duos", "BR Trios", "BR Quads"]

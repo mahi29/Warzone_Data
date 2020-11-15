@@ -1,8 +1,9 @@
 from typing import Tuple, List, Optional
 
 import requests
+from marshmallow import ValidationError
 
-from constants import MAX_CALLS
+from constants import MAX_CALLS, CORE_MODES
 from models.player import Player
 from schemas.warzone_match_schema import WarzoneMatch, WARZONE_MATCH_SCHEMA
 
@@ -77,5 +78,12 @@ class CodTrackerScraper:
             print(f"Fetching data for match {match_id} failed with {str(e)}")
             return None
 
-        warzone_match_data: WarzoneMatch = WARZONE_MATCH_SCHEMA.load(resp.json()["data"])
+        try:
+            warzone_match_data: WarzoneMatch = WARZONE_MATCH_SCHEMA.load(resp.json()["data"])
+        except ValidationError as ve:
+            print(f"Fetching data for {match_id} failed with a Marshmallow error {str(ve)}")
+            return None
+
+        if warzone_match_data.metadata.mode_name not in CORE_MODES:
+            return None
         return self._filter_out_non_allied_players(player, warzone_match_data)
