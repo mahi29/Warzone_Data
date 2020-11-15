@@ -1,6 +1,6 @@
 from models.player import Player
 
-MAX_CALLS = 1
+MAX_CALLS = 5
 
 BRIAN = Player(activision_id="8226586", name="Brian", display_name="Harmuny")
 JUSTIN = Player(activision_id="2716959", name="Justin", display_name="jsquared8")
