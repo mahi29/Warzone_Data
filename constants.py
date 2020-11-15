@@ -14,7 +14,9 @@ TIME_FORMAT = "%m/%d/%Y %H:%M"
 INDIVIDUAL_PLAYER_ROW_FORMAT = (
     "{match_id},{time},{placement},{kills},{deaths},{dmg_done},{gulag_kills},{gulag_deaths},{roster},{mode}"
 )
-TEAM_ROW_FORMAT = "{match_id},{time},{game_duration},{placement},{kills},{deaths},{dmg_done},{roster},{mode}"
+TEAM_ROW_FORMAT = (
+    "{match_id},{time},{game_duration},{placement},{kills},{deaths},{dmg_done},{roster},{mode},{win},{top_five}"
+)
 
 
 GAMERTAG_TO_NAME_MAP = {

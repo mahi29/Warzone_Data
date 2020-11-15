@@ -49,6 +49,8 @@ class WarzoneData:
             dmg_done=combined_dmg,
             roster="|".join(team_roster),
             mode=warzone_match_data.metadata.mode_name,
+            win=1 if team_placement == 1 else 0,
+            top_five=1 if team_placement <= 5 else 0,
         )
 
         return team_row_as_str.split(",")
