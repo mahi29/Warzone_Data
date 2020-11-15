@@ -6,13 +6,15 @@ from googleapiclient import discovery
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-# If modifying these scopes, delete the file token.pickle.
 from models.player import Player
 
+# If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 MBDF_SHEET_ID = "1wafgNIgMskQh9_UI0yyXppsoaSJhRottbK0iV8thIXQ"
+R306_SHEET_ID = "1RI8-POdqf2UHHa2B86EW7-krQ0ED9hiFu5yXBN4GacE"
 RANGE = "A:Z"
-SHEETS = ["Overall", "Mahith"]
+MBDF_SHEETS = ["Overall", "Brian", "Justin", "Mahith", "Vinny"]
+R306_SHEETS = ["Overall", "Mahith", "Noah", "Patrick", "Ravi"]
 
 
 class GoogleSheetsApi:
@@ -44,13 +46,13 @@ class GoogleSheetsApi:
         request = (
             self.google_sheets_service.spreadsheets()
             .values()
-            .append(spreadsheetId=MBDF_SHEET_ID, range="Mahith", body=body, valueInputOption="USER_ENTERED")
+            .append(spreadsheetId=MBDF_SHEET_ID, range=player.name, body=body, valueInputOption="USER_ENTERED")
         )
         result = request.execute()
         return result
 
     def get_last_match_recorded(self, player: Player) -> Optional[str]:
-        request = self.google_sheets_service.spreadsheets().values().get(spreadsheetId=MBDF_SHEET_ID, range="Mahith")
+        request = self.google_sheets_service.spreadsheets().values().get(spreadsheetId=MBDF_SHEET_ID, range=player.name)
         result = request.execute()
         values = result.get("values", [])
         if len(values) < 2:
