@@ -48,7 +48,7 @@ class WarzoneData:
             kills=team_kills,
             deaths=team_deaths,
             dmg_done=combined_dmg,
-            roster=",".join(team_roster),
+            roster="|".join(team_roster),
             mode=warzone_match_data.metadata.mode_name,
         )
 
@@ -69,23 +69,24 @@ class WarzoneData:
             gulag_kills=warzone_player.stats.gulag_kills,
             dmg_done=warzone_player.stats.damage_done,
             gulag_deaths=warzone_player.stats.gulag_deaths,
-            roster=",".join(team_roster),
+            roster="|".join(team_roster),
             mode=warzone_match_data.metadata.mode_name,
         )
         return row_as_str.split(",")
 
-    def write_team_stats_to_google_sheets(self):
+    def write_team_stats_to_google_sheets(self, team: str):
+        all_teammates = set(p.name for p in TEAM_ROSTERS[team])
         all_matches_played_by_all_teammates = list(self.warzone_match_cache.values())
         all_matches_played_by_all_teammates.sort(key=lambda wz_match: wz_match.metadata.start_time_ts)
         team_data = []
         for match in all_matches_played_by_all_teammates:
             team_roster = self._get_team_roster_for_match(match)
-            if len(team_roster) == 2 and RANDOM_PLAYER in team_roster:
-                # If you've only played with randoms, don't include it in the team charts
+            if len(set(team_roster) & all_teammates) < 2:
+                # If you haven't played with any of your other teammates, don't include it in the team charts
                 continue
             row = self._get_data_for_team_row(match)
             team_data.append(row)
-        self.google_sheets_api.write_new_game_data_for_team(team_data)
+        self.google_sheets_api.write_new_game_data_for_team(team, team_data)
 
     def write_warzone_individual_stats_to_google_sheets(self, player: Player, team: str, match_ids: List[str]):
         indiv_rows_to_be_written = []
@@ -109,6 +110,7 @@ class WarzoneData:
     def run_for_team(self, team: str) -> None:
         total_roster = TEAM_ROSTERS[team]
         for player in total_roster:
+            print(f"\nPulling stats for {player.name}")
             latest_match_recorded = self.google_sheets_api.get_last_match_recorded(player, team)
             match_ids = self.scraper.get_all_new_match_ids_for_player(player, latest_match_recorded)
             self.write_warzone_individual_stats_to_google_sheets(player, team, match_ids)
@@ -124,7 +126,7 @@ class WarzoneData:
             raise Exception("Please pick one of the valid options")
 
         team = TEAM_R306 if team_choice_input == 1 else TEAM_MBDF
-        print(f"\n\nAggregating results for {team}...\n\n")
+        print(f"\nAggregating results for {team}...\n")
         return team
 
     def run(self):
