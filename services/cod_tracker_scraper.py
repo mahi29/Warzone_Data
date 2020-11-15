@@ -14,7 +14,7 @@ HEADERS = {
 
 
 class CodTrackerScraper:
-    def get_all_new_match_ids_for_player(self, player: Player, last_match_recorded: str):
+    def get_all_new_match_ids_for_player(self, player: Player, last_match_recorded: Optional[str]) -> List[str]:
         """
         Fetches all matches a player has played up to a given end match or the 100 most recent (whichever is smaller)
         :param player:
@@ -66,7 +66,7 @@ class CodTrackerScraper:
         warzone_match_data.players = allied_players
         return warzone_match_data
 
-    def get_data_for_match(self, match_id: int, player: Player) -> Optional[WarzoneMatch]:
+    def get_data_for_match(self, match_id: str, player: Player) -> Optional[WarzoneMatch]:
         print(f"Fetching data for match {match_id}")
         url = MATCH_DATA_URL.format(match_id)
         params = {"handle": player.get_urlencoded_display_name()}
