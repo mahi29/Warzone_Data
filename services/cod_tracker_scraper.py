@@ -4,7 +4,7 @@ import requests
 
 from constants import MAX_CALLS
 from models.player import Player
-from warzone_match_schema import WarzoneMatch, WARZONE_MATCH_SCHEMA
+from schemas.warzone_match_schema import WarzoneMatch, WARZONE_MATCH_SCHEMA
 
 PLAYER_DATA_URL = "https://api.tracker.gg/api/v1/warzone/matches/atvi/{}?type=wz&next={}"
 MATCH_DATA_URL = "https://api.tracker.gg/api/v1/warzone/matches/{}"
@@ -16,7 +16,7 @@ HEADERS = {
 class CodTrackerScraper:
     def get_all_new_match_ids_for_player(self, player: Player, last_match_recorded: str):
         """
-        Fetches all the matches a player has played upto a given end match or the 100 most recent (whichever is smaller)
+        Fetches all matches a player has played up to a given end match or the 100 most recent (whichever is smaller)
         :param player:
         :param last_match_recorded:
         :return:
@@ -34,7 +34,7 @@ class CodTrackerScraper:
 
         return all_new_match_ids
 
-    def _get_match_ids_for_player(self, player: Player, page_start: Optional[str]) -> Tuple[List[str], str]:
+    def _get_match_ids_for_player(self, player: Player, page_start: Optional[str]) -> Tuple[List[str], Optional[str]]:
         """
         Returns the next recent 20 match_ids for a player given a pagination start token
         If no token is provided, it will begin at the most recent match

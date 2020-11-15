@@ -1,10 +1,9 @@
-from dataclasses import dataclass
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 import inflection
 from marshmallow import fields, pre_load
 
-from base_schema import AutobuildSchema
+from schemas.base_schema import AutobuildSchema
 from models.external_models.cod_tracker_models import (
     WarzoneMatchMetadata,
     WarzonePlayerStats,
