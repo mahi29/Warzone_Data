@@ -6,15 +6,12 @@ from googleapiclient import discovery
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
+from constants import TEAM_TO_SHEET_ID
 from models.player import Player
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-MBDF_SHEET_ID = "1wafgNIgMskQh9_UI0yyXppsoaSJhRottbK0iV8thIXQ"
-R306_SHEET_ID = "1RI8-POdqf2UHHa2B86EW7-krQ0ED9hiFu5yXBN4GacE"
 RANGE = "A:Z"
-MBDF_SHEETS = ["Overall", "Brian", "Justin", "Mahith", "Vinny"]
-R306_SHEETS = ["Overall", "Mahith", "Noah", "Patrick", "Ravi"]
 
 
 class GoogleSheetsApi:
@@ -41,18 +38,27 @@ class GoogleSheetsApi:
                 pickle.dump(creds, token)
         return creds
 
-    def write_new_game_data_for_player(self, player: Player, match_data: List[List[str]]) -> None:
-        body = {"values": match_data}
+    def _append_data_to_sheet(self, spreadsheet_id: str, sheet: str, data: List[List[str]]) -> None:
+        body = {"values": data}
         request = (
             self.google_sheets_service.spreadsheets()
             .values()
-            .append(spreadsheetId=MBDF_SHEET_ID, range=player.name, body=body, valueInputOption="USER_ENTERED")
+            .append(spreadsheetId=spreadsheet_id, range=sheet, body=body, valueInputOption="USER_ENTERED")
         )
         result = request.execute()
         return result
 
-    def get_last_match_recorded(self, player: Player) -> Optional[str]:
-        request = self.google_sheets_service.spreadsheets().values().get(spreadsheetId=MBDF_SHEET_ID, range=player.name)
+    def write_new_game_data_for_team(self, team: str, match_data: List[List[str]]) -> None:
+        return self._append_data_to_sheet(spreadsheet_id=TEAM_TO_SHEET_ID[team], sheet="Overall", data=match_data)
+
+    def write_new_game_data_for_player(self, player: Player, team: str, match_data: List[List[str]]) -> None:
+        return self._append_data_to_sheet(spreadsheet_id=TEAM_TO_SHEET_ID[team], sheet=player.name, data=match_data)
+
+    def get_last_match_recorded(self, player: Player, team: str) -> Optional[str]:
+        spreadsheet_id = TEAM_TO_SHEET_ID[team]
+        request = (
+            self.google_sheets_service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=player.name)
+        )
         result = request.execute()
         values = result.get("values", [])
         if len(values) < 2:
