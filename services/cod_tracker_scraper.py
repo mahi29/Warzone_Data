@@ -6,13 +6,14 @@ from constants import MAX_CALLS
 from models.player import Player
 from warzone_match_schema import WarzoneMatch, WARZONE_MATCH_SCHEMA
 
-PLAYER_DATA_URL = 'https://api.tracker.gg/api/v1/warzone/matches/atvi/{}?type=wz&next={}'
-MATCH_DATA_URL = 'https://api.tracker.gg/api/v1/warzone/matches/{}'
-HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+PLAYER_DATA_URL = "https://api.tracker.gg/api/v1/warzone/matches/atvi/{}?type=wz&next={}"
+MATCH_DATA_URL = "https://api.tracker.gg/api/v1/warzone/matches/{}"
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+}
 
 
 class CodTrackerScraper:
-
     def get_all_new_match_ids_for_player(self, player: Player, last_match_recorded: str):
         """
         Fetches all the matches a player has played upto a given end match or the 100 most recent (whichever is smaller)
@@ -41,7 +42,7 @@ class CodTrackerScraper:
         :param page_start:
         :return:
         """
-        pagination_token = page_start if page_start else 'null'
+        pagination_token = page_start if page_start else "null"
         url = PLAYER_DATA_URL.format(player.get_urlencoded_activision_username(), pagination_token)
         match_ids = []
         try:
@@ -51,12 +52,12 @@ class CodTrackerScraper:
             print(f"Fetching data for {player.display_name} failed {str(e)}")
             return [], None
 
-        resp_data = resp.json()['data']
-        matches_data = resp_data['matches']
+        resp_data = resp.json()["data"]
+        matches_data = resp_data["matches"]
         for match_data in matches_data:
-            match_id = match_data['attributes']['id']
+            match_id = match_data["attributes"]["id"]
             match_ids.append(match_id)
-        return match_ids, resp_data['metadata']['next']
+        return match_ids, resp_data["metadata"]["next"]
 
     def _filter_out_non_allied_players(self, player: Player, warzone_match_data: WarzoneMatch) -> WarzoneMatch:
         wz_player_data = next(p for p in warzone_match_data.players if p.gamertag == player.display_name)
@@ -68,7 +69,7 @@ class CodTrackerScraper:
     def get_data_for_match(self, match_id: int, player: Player) -> Optional[WarzoneMatch]:
         print(f"Fetching data for match {match_id}")
         url = MATCH_DATA_URL.format(match_id)
-        params = {'handle': player.get_urlencoded_display_name()}
+        params = {"handle": player.get_urlencoded_display_name()}
         try:
             resp = requests.get(url, headers=HEADERS, params=params)
             resp.raise_for_status()
@@ -76,6 +77,5 @@ class CodTrackerScraper:
             print(f"Fetching data for match {match_id} failed with {str(e)}")
             return None
 
-        warzone_match_data: WarzoneMatch = WARZONE_MATCH_SCHEMA.load(resp.json()['data'])
+        warzone_match_data: WarzoneMatch = WARZONE_MATCH_SCHEMA.load(resp.json()["data"])
         return self._filter_out_non_allied_players(player, warzone_match_data)
-

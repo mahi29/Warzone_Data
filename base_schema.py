@@ -2,7 +2,6 @@ from marshmallow import Schema, EXCLUDE, post_load
 
 
 class AutobuildSchema(Schema):
-
     class Meta:
         unknown = EXCLUDE
 
