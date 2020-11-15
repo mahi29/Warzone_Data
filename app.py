@@ -114,7 +114,7 @@ class WarzoneData:
             latest_match_recorded = self.google_sheets_api.get_last_match_recorded(player, team)
             match_ids = self.scraper.get_all_new_match_ids_for_player(player, latest_match_recorded)
             self.write_warzone_individual_stats_to_google_sheets(player, team, match_ids)
-        self.write_team_stats_to_google_sheets()
+        self.write_team_stats_to_google_sheets(team)
 
     def prompt_user_for_team(self):
         try:
