@@ -12,10 +12,10 @@ from constants import (
 )
 from models.external_models.cod_tracker_models import WarzoneMatch, WarzonePlayerData
 from models.player import Player
-from services.cod_tracker_scraper import CodTrackerScraper
+from external_services.cod_tracker_scraper import CodTrackerScraper
 from time import time
 
-from services.google_sheets_api import GoogleSheetsApi
+from external_services.google_sheets_api import GoogleSheetsApi
 
 
 class WarzoneData:
