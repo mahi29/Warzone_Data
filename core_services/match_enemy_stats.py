@@ -27,7 +27,7 @@ class MatchEnemyStats:
         print(
             f"""
 Match {match_id} Player Stats
-There is data for {self.total_players_in_match - self.skipped_players}/{self.total_players_in_match}
+There is data for {self.total_players_in_match - self.skipped_players}/{self.total_players_in_match} players
 The average K/D for all players is {avg_kd_in_match} and the standard deviation is {std_dev_of_indiv_kd}
 The lowest K/D is {min_kd_in_match}
 25% Percentile: {quantiles_breakdown[0]}
