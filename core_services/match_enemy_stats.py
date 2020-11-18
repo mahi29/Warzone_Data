@@ -1,3 +1,4 @@
+from statistics import pstdev, quantiles
 from time import sleep
 from typing import List, Tuple
 
@@ -18,6 +19,8 @@ class MatchEnemyStats:
         min_kd_in_match = min(all_player_kd)
         max_kd_in_match = max(all_player_kd)
         avg_kd_in_match = round(sum(all_player_kd) / len(all_player_kd), 2)
+        std_dev_of_indiv_kd = pstdev(all_player_kd)
+        quantiles_breakdown = quantiles(all_player_kd, method="inclusive")
         avg_kd_of_teams = round(sum(team_avg_kd) / len(team_avg_kd), 2)
         kd_top_15 = team_avg_kd[:15]
 
@@ -25,9 +28,12 @@ class MatchEnemyStats:
             f"""
 Match {match_id} Player Stats
 There is data for {self.total_players_in_match - self.skipped_players}/{self.total_players_in_match}
-The average K/D for all players is {avg_kd_in_match}
-The best K/D is {max_kd_in_match}
+The average K/D for all players is {avg_kd_in_match} and the standard deviation is {std_dev_of_indiv_kd}
 The lowest K/D is {min_kd_in_match}
+25% Percentile: {quantiles_breakdown[0]}
+50% Percentile: {quantiles_breakdown[1]}
+75% Percentile: {quantiles_breakdown[2]}
+The best K/D is {max_kd_in_match}
 
 There is data for {len(team_avg_kd)} teams
 The average K/D of all teams is {avg_kd_of_teams}
