@@ -17,8 +17,8 @@ class MatchEnemyStats:
             return
         min_kd_in_match = min(all_player_kd)
         max_kd_in_match = max(all_player_kd)
-        avg_kd_in_match = sum(all_player_kd) / len(all_player_kd)
-        avg_kd_of_teams = sum(team_avg_kd) / len(team_avg_kd)
+        avg_kd_in_match = round(sum(all_player_kd) / len(all_player_kd), 2)
+        avg_kd_of_teams = round(sum(team_avg_kd) / len(team_avg_kd), 2)
         kd_top_15 = team_avg_kd[:15]
 
         print(
