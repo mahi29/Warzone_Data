@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 from models.player import Player
 
 MAX_CALLS = 5
@@ -53,3 +55,8 @@ TEAM_TO_SHEET_ID = {
 }
 
 CORE_MODES = ["BR Solos", "BR Duos", "BR Trios", "BR Quads"]
+
+
+class RunOptions(IntEnum):
+    TEAM_STATS = 1
+    ENEMY_STATS = 2

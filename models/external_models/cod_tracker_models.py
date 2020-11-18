@@ -32,3 +32,13 @@ class WarzonePlayerData:
 class WarzoneMatch:
     metadata: WarzoneMatchMetadata
     players: List[WarzonePlayerData]
+
+
+@dataclass
+class WarzonePlayerSearchResult:
+    full_activision_username: str
+
+
+@dataclass
+class WarzonePlayerSearchResults:
+    players: List[WarzonePlayerSearchResult]
