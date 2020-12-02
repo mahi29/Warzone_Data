@@ -1,6 +1,7 @@
+import operator
 from statistics import pstdev, quantiles
 from time import sleep
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from external_services.cod_tracker_scraper import CodTrackerScraper
 from models.player import Player
@@ -14,11 +15,13 @@ class MatchEnemyStats:
         self.warzone_match_data = None
 
     def display_stats_for_enemies_in_match(self, match_id: str) -> None:
-        team_avg_kd, all_player_kd = self.pull_stats_for_enemies_in_match(match_id)
-        if not team_avg_kd or not all_player_kd:
+        team_avg_kd, player_to_kd_dict = self.pull_stats_for_enemies_in_match(match_id)
+        if not team_avg_kd or not player_to_kd_dict:
             return
+        all_player_kd = player_to_kd_dict.values()
         min_kd_in_match = min(all_player_kd)
         max_kd_in_match = max(all_player_kd)
+        best_player = max(player_to_kd_dict, key=lambda x: player_to_kd_dict[x])
         avg_kd_in_match = round(sum(all_player_kd) / len(all_player_kd), 2)
         std_dev_of_indiv_kd = round(pstdev(all_player_kd), 4)
         quantiles_breakdown = quantiles(all_player_kd, method="inclusive")
@@ -34,7 +37,7 @@ The lowest K/D is {min_kd_in_match}
 25% Percentile: {quantiles_breakdown[0]}
 50% Percentile: {quantiles_breakdown[1]}
 75% Percentile: {quantiles_breakdown[2]}
-The best K/D is {max_kd_in_match}
+The best K/D is {max_kd_in_match} ({best_player})
 
 There is data for {len(team_avg_kd)} teams (Expected {self.warzone_match_data.metadata.team_count} teams)
 The average K/D of all teams is {avg_kd_of_teams}
@@ -43,13 +46,13 @@ The average K/D of all teams is {avg_kd_of_teams}
         for idx, top_15_team in enumerate(kd_top_15):
             print(f"Team #{idx + 1}'s K/D is {top_15_team}")
 
-    def pull_stats_for_enemies_in_match(self, match_id: str) -> Tuple[List[float], List[float]]:
+    def pull_stats_for_enemies_in_match(self, match_id: str) -> Tuple[List[float], Dict[str, float]]:
         self.warzone_match_data = self.scraper.get_all_data_for_match(match_id)
         if not self.warzone_match_data:
-            return [], []
+            return [], {}
         team_array = [[] for i in range(self.warzone_match_data.metadata.team_count)]
         team_avg_kd = []
-        all_player_kds = []
+        all_player_kds = {}
         for wz_player in self.warzone_match_data.players:
             sleep(3)
             self.total_players_in_match += 1
@@ -62,7 +65,7 @@ The average K/D of all teams is {avg_kd_of_teams}
             if not player_kd:
                 self.skipped_players += 1
                 continue
-            all_player_kds.append(player_kd)
+            all_player_kds[wz_player.gamertag] = player_kd
             team_array[wz_player.stats.team_placement - 1].append(player_kd)
 
         for team in team_array:
