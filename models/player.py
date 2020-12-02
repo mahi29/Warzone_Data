@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import urllib.parse
+from typing import Optional
 
 
 @dataclass
@@ -7,6 +8,7 @@ class Player:
     activision_id: str
     display_name: str
     name: str
+    platform: Optional[str] = "atvi"
 
     def get_urlencoded_display_name(self) -> str:
         return urllib.parse.quote(self.display_name)

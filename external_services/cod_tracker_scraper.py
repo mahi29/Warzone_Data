@@ -1,5 +1,5 @@
 import urllib.parse
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Dict, Any
 
 import requests
 from bs4 import BeautifulSoup
@@ -11,8 +11,8 @@ from schemas.warzone_match_schema import WarzoneMatch, WARZONE_MATCH_SCHEMA
 
 PLAYER_MATCH_DATA_URL = "https://api.tracker.gg/api/v1/warzone/matches/atvi/{}?type=wz&next={}"
 MATCH_DATA_URL = "https://api.tracker.gg/api/v1/warzone/matches/{}"
-PLAYER_OVERVIEW_URL = "https://cod.tracker.gg/warzone/profile/atvi/{}?overview"
-PLAYER_SEARCH_URL = "https://api.tracker.gg/api/v2/warzone/standard/search?platform=atvi&query={}&autocomplete=true"
+PLAYER_OVERVIEW_URL = "https://cod.tracker.gg/warzone/profile/{}/{}?overview"
+PLAYER_SEARCH_URL = "https://api.tracker.gg/api/v2/warzone/standard/search?platform={}&query={}&autocomplete=true"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
@@ -65,59 +65,55 @@ class CodTrackerScraper:
             match_ids.append(match_id)
         return match_ids, resp_data["metadata"]["next"]
 
-    def get_activision_id_for_gamertag(self, gamertag: str) -> Optional[str]:
-        print(f"Getting Activision ID for {gamertag}")
+    def _make_request_for_player_search(self, platform: str, gamertag: str) -> List[Dict[str, Any]]:
         url_encoded_tag = urllib.parse.quote(gamertag)
-        url = PLAYER_SEARCH_URL.format(url_encoded_tag)
+        url = PLAYER_SEARCH_URL.format(platform, url_encoded_tag)
         try:
             resp = requests.get(url, headers=HEADERS)
             resp.raise_for_status()
+            return resp.json()["data"]
         except Exception as e:
             print(f"Getting Activision ID for {gamertag} failed {str(e)}")
-            return None
+            return []
 
-        resp_data = resp.json()["data"]
-        if len(resp_data) == 1:
-            search_result = resp_data[0]
+    def get_activision_id_for_gamertag(self, gamertag: str) -> Tuple[Optional[str], str]:
+        print(f"Getting Activision ID for {gamertag}")
+        platform = "atvi"
+        search_data = self._make_request_for_player_search(platform, gamertag)
+        if not search_data:
+            platform = "psn"
+            search_data = self._make_request_for_player_search(platform, gamertag)
+
+        if len(search_data) == 1:
+            search_result = search_data[0]
             full_username = search_result["platformUserIdentifier"]
-            return full_username[len(gamertag) + 1 :]
+            activision_id = full_username[len(gamertag) + 1 :]
+            print(f"Activision ID for {gamertag} is {activision_id} (matched against [{platform}] {full_username})")
+            return activision_id, platform
 
-        possible_options = []
-        for search_result in resp_data:
-            full_username = search_result["platformUserIdentifier"]
-            # If the starting n (where n is the len of the tag) characters match w/o case sensitivity, its an option
-            if gamertag.lower() == full_username[: len(gamertag)].lower():
-                possible_options.append(full_username)
-
-        for needle in [gamertag, gamertag.lower()]:
-            for possible_option in possible_options:
-                if gamertag == possible_option[: len(needle)]:
-                    if len(possible_option) == len(needle):
-                        # There is no Activision ID for some reason e.g "Yoda"
-                        return ""
-                    if "#" == possible_option[len(needle)]:
-                        # Check if a '#' exists immediately after the tag
-                        # There is an Activision ID and its a case sensitive match e.g "Yoda#548485"
-                        return possible_option[len(needle) + 1 :]
-
-        return None
-
-        # Try matching with case sensitivity, if nothing matches, then go to all lowercase
-        for needle in [gamertag, gamertag.lower()]:
-            for search_result in resp_data:
+        for idx, needle in enumerate([gamertag, gamertag.lower()]):
+            for search_result in search_data:
                 full_username = search_result["platformUserIdentifier"]
-                if "#" not in full_username:
+                if idx == 1:
+                    full_username = full_username.lower()
+                tag_from_result, *activision_id = full_username.split("#")
+                if len(activision_id) > 1:
+                    print(f"Skipping because too many values unpacked - {full_username}")
+                    # This should only happen if there's a '#' in the gamertag itself, no idea if this can happen though
                     continue
-                if needle != full_username[: len(needle)]:
-                    continue
-                if "#" != full_username[len(needle)]:
-                    continue
-                return full_username[len(needle) + 1 :]
-            return None
+                if tag_from_result == needle:
+                    print(
+                        f"Activision ID for {gamertag} is {activision_id} (matched against [{platform}] {full_username})"
+                    )
+                    id = activision_id[0] if activision_id else ""
+                    return id, platform
+
+        print(f"Could not find Activision ID for {gamertag}")
+        return None, platform
 
     def get_last_7d_kd_ratio_for_player(self, player: Player) -> Optional[float]:
-        print(f"Getting last 7d KD for {player.display_name}")
-        url = PLAYER_OVERVIEW_URL.format(player.get_urlencoded_activision_username())
+        print(f"Getting last 7d KD for {player.display_name} from {player.platform}")
+        url = PLAYER_OVERVIEW_URL.format(player.platform, player.get_urlencoded_activision_username())
         page = requests.get(url)
         soup = BeautifulSoup(page.content, "html.parser")
         l7d_tag = soup.body.find(text="Last 7 Days")
